@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bcb4297e742793c4a976ce14b5dae047, type: 3}
+  m_Name: SteamVR_Input_ActionSet_default_In
+  m_EditorClassIdentifier: 
+  actionSet: {fileID: 0}
+  listDirection: 0
+  actions:
+  - {fileID: 11400000, guid: 95f784c82f56c1b4b97d0ff0c830f41a, type: 2}
+  - {fileID: 11400000, guid: 310340fa5637c2049965e13c20aaca12, type: 2}
+  - {fileID: 11400000, guid: c13acad43421fbe4780008e1a8b36d7b, type: 2}
+  - {fileID: 11400000, guid: 3c31d72ddd791194ca96556ebe86ce22, type: 2}
+  - {fileID: 11400000, guid: bf04a170342dfae49bea1b5636b4ea46, type: 2}
+  - {fileID: 11400000, guid: c4828bbaa86975e449c012a2cda12c8a, type: 2}
+  - {fileID: 11400000, guid: 6a58f2ded06a23e4e9407260802ceff2, type: 2}
+  Pose: {fileID: 11400000, guid: 95f784c82f56c1b4b97d0ff0c830f41a, type: 2}
+  GrabArrow: {fileID: 11400000, guid: 310340fa5637c2049965e13c20aaca12, type: 2}
+  GrabBowString: {fileID: 11400000, guid: c13acad43421fbe4780008e1a8b36d7b, type: 2}
+  Menu: {fileID: 11400000, guid: 3c31d72ddd791194ca96556ebe86ce22, type: 2}
+  AbilityPad: {fileID: 11400000, guid: bf04a170342dfae49bea1b5636b4ea46, type: 2}
+  AbilitySelect: {fileID: 11400000, guid: c4828bbaa86975e449c012a2cda12c8a, type: 2}
+  SmallTeleport: {fileID: 11400000, guid: 6a58f2ded06a23e4e9407260802ceff2, type: 2}

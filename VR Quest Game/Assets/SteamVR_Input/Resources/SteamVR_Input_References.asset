@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4d10323487cb44348b830bc017eb40b4, type: 3}
+  m_Name: SteamVR_Input_References
+  m_EditorClassIdentifier: 
+  actionSetNames:
+  - _default
+  actionSetObjects:
+  - {fileID: 11400000, guid: 347c0bcb8578c024ea5ad25b39d6f67f, type: 2}
+  actionNames:
+  - __actions_default_in_Pose
+  - __actions_default_in_GrabArrow
+  - __actions_default_in_GrabBowString
+  - __actions_default_in_Menu
+  - __actions_default_in_AbilityPad
+  - __actions_default_in_AbilitySelect
+  - __actions_default_in_SmallTeleport
+  - __actions_default_out_Haptic
+  actionObjects:
+  - {fileID: 11400000, guid: 95f784c82f56c1b4b97d0ff0c830f41a, type: 2}
+  - {fileID: 11400000, guid: 310340fa5637c2049965e13c20aaca12, type: 2}
+  - {fileID: 11400000, guid: c13acad43421fbe4780008e1a8b36d7b, type: 2}
+  - {fileID: 11400000, guid: 3c31d72ddd791194ca96556ebe86ce22, type: 2}
+  - {fileID: 11400000, guid: bf04a170342dfae49bea1b5636b4ea46, type: 2}
+  - {fileID: 11400000, guid: c4828bbaa86975e449c012a2cda12c8a, type: 2}
+  - {fileID: 11400000, guid: 6a58f2ded06a23e4e9407260802ceff2, type: 2}
+  - {fileID: 11400000, guid: b33ddfc87b8e6054ea536cca9b53ee7b, type: 2}
