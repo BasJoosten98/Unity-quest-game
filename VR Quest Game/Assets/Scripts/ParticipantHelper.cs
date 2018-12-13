@@ -46,7 +46,7 @@ public class ParticipantHelper : NetworkBehaviour
                     }
                     else
                     {
-                        Hit.GetComponent<Bot>().Die();
+                        Hit.GetComponent<Bot>().RpcDie();
                     }
                     if (ParticipantManager.SelfRespawnAllowed) { StartCoroutine("respawnTimer", Hit.gameObject); }
                 }

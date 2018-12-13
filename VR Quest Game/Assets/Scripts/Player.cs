@@ -45,10 +45,12 @@ public class Player : NetworkBehaviour
         if (isLocalPlayer)
         {
             if (myVRRig != null) { myVRRig.ConInput.SetPlayer(this); }
-            ParticipantHelper.PH.CmdRegisterPlayer(this.netId, "Bas Joosten");
+            bow.GetComponent<PlayerBow>().ThisIsMyBow();
+            //ParticipantHelper.PH.CmdRegisterPlayer(this.netId, "Bas Joosten");
             //bow.GetComponent<PlayerBow>().SetOwner(this.GetComponent<ParticipantID>()); //clients don't own an ID, the sever does!
             //checkMaterials(); //will be done by the server in CmdRegisterPlayer
-            myVRRig.Head.GetComponent<BoxCollider>().enabled = false;
+            //myVRRig.Head.GetComponent<BoxCollider>().enabled = false; //is not possible
+            head.GetComponent<MeshRenderer>().enabled = false;
         }
     }
     public void SetOrTriggerAbility(Ability a)
@@ -58,7 +60,7 @@ public class Player : NetworkBehaviour
             GameObject arrowWithAbility = bow.GetComponent<PlayerBow>().getFlyingArrowWithAbility();
             if (arrow != null) //you have a arrow in hand
             {
-                if (arrowWithAbility == null) //there is no exisiting arrow with an ability
+                if (arrowWithAbility == null) //there is no exisiting arrow (in air) with an ability
                 {
                     arrow.GetComponent<Arrow>().SetAbility(a);
                 }
@@ -77,7 +79,7 @@ public class Player : NetworkBehaviour
     {
         if (arrowWithAbility.GetComponent<Arrow>().Ability == Ability.Teleport)
         {
-            if (myVRRig.ConInput.TeleportTo(arrowWithAbility.transform.position, false, true, true)) //teleporting succeeded!
+            if (myVRRig.ConInput.TeleportTo(arrowWithAbility.transform.position, false, true, true, 6)) //teleporting succeeded!
             {
                 Destroy(arrowWithAbility);
             }
@@ -204,12 +206,24 @@ public class Player : NetworkBehaviour
     [Command]
     private void CmdSpawnArrowInHand()
     {
-        GameObject newArrow = GameObject.Instantiate(ArrowPrefab, myVRRig.RightHand.transform.position, myVRRig.RightHand.transform.rotation);
+        //GameObject newArrow = GameObject.Instantiate(ArrowPrefab, myVRRig.RightHand.transform.position, myVRRig.RightHand.transform.rotation); not possible(myVRRig is unknown on server/locals)
+        GameObject newArrow = GameObject.Instantiate(ArrowPrefab, transform.position  + transform.forward.normalized, transform.rotation);
         newArrow.GetComponent<MeshRenderer>().material = body.transform.GetChild(0).GetComponent<MeshRenderer>().material; //PropArrow Material
-        if (this.GetComponent<ParticipantID>()) { newArrow.GetComponent<Arrow>().SetShooter(this.GetComponent<ParticipantID>()); }       
-        arrow = newArrow;
-        NetworkServer.Spawn(arrow);
-    } 
+        if (this.GetComponent<ParticipantID>()) { newArrow.GetComponent<Arrow>().SetShooter(this.GetComponent<ParticipantID>()); }
+        NetworkServer.SpawnWithClientAuthority(newArrow, this.GetComponent<NetworkIdentity>().connectionToClient);
+
+        RpcSetArrow(newArrow.GetComponent<NetworkIdentity>().netId);
+    }
+    [ClientRpc]
+    private void RpcSetArrow(NetworkInstanceId netId)
+    {
+        if (isLocalPlayer)
+        {
+            GameObject newArrow = ClientScene.FindLocalObject(netId);
+            arrow = newArrow;
+            arrow.GetComponent<Arrow>().ThisIsMyArrow();
+        }
+    }
     [Command]
     private void CmdRemoveArrowInHand()
     {
@@ -236,14 +250,33 @@ public class Player : NetworkBehaviour
             {
                 GameObject temp = arrow; //needed for startCoroutine being faster than ReleaseString() ERROR
                 arrow = null;
-                if (!bow.GetComponent<PlayerBow>().ReleaseString()) //arrow can not be shot away
+
+                float distance;
+                if (!bow.GetComponent<PlayerBow>().ReleaseString(out distance)) //arrow can not be shot away
                 {
                     arrow = temp;
+                }
+                else //arrow will be shot away
+                {
+                    CmdstartShootArrow(distance);
                 }
             }
         }
         else { Debug.LogWarning("Non local player: Player.ReleaseArrowFromBow " + Time.frameCount); }
-    } 
+    }
+    [Command]
+    private void CmdstartShootArrow(float distance)
+    {
+        RpcstartShootArrow(distance);
+    }
+    [ClientRpc]
+    private void RpcstartShootArrow(float distance)
+    {
+        if (!isLocalPlayer)
+        {
+            StartCoroutine("ShootArrow", distance);
+        }
+    }
     public void AttachArrowToHand(GameObject Arrow)
     {
         if (isLocalPlayer)
@@ -257,21 +290,29 @@ public class Player : NetworkBehaviour
         if (isLocalPlayer)
         {
             RaycastHit hit;
-            Vector3 spawnLocation;
-            float rayDistance = 1.5f;
-            if (Physics.Raycast(bow.transform.position, bow.transform.forward, out hit, rayDistance))
+            int layerMask = 1;
+            Vector3 bowDirection = bow.transform.position - myVRRig.Head.transform.position;
+            float bowDistance = Vector3.Distance(bow.transform.position, myVRRig.Head.transform.position);
+
+            //if (!Physics.Raycast(myVRRig.Head.transform.position, bowDirection, out hit, bowDistance, layerMask)) //noting is in the way between bow and head
+            if (!Physics.BoxCast(myVRRig.Head.transform.position, new Vector3(0.05f, 0.05f, 0.05f), bowDirection, out hit, Quaternion.Euler(0, 0, 0), bowDistance, layerMask))
             {
-                spawnLocation = hit.point + hit.normal.normalized * 0.2f;
-            }
-            else
-            {
-                spawnLocation = bow.transform.position + bow.transform.forward.normalized * rayDistance;
-            }
-            for (int i = 3; i > 0; i--)
-            {
-                if (myVRRig.ConInput.TeleportTo(bow.transform.position + (spawnLocation - bow.transform.position) * i / 3, false, true, true))
+                Vector3 spawnLocation;
+                float rayDistance = 1.5f; //max teleporting distance
+                if (Physics.Raycast(bow.transform.position, bow.transform.forward, out hit, rayDistance))
                 {
-                    break;
+                    spawnLocation = hit.point + hit.normal.normalized * 0.2f;
+                }
+                else
+                {
+                    spawnLocation = bow.transform.position + bow.transform.forward.normalized * rayDistance;
+                }
+                for (int i = 3; i > 0; i--)
+                {
+                    if (myVRRig.ConInput.TeleportTo(bow.transform.position + (spawnLocation - bow.transform.position) * i / 3, false, true, true, 3))
+                    {
+                        break;
+                    }
                 }
             }
         }
@@ -286,7 +327,7 @@ public class Player : NetworkBehaviour
     {
         if (isLocalPlayer)
         {
-            myVRRig.ConInput.TeleportTo(location, false, false, false);
+            myVRRig.ConInput.TeleportTo(location, false, false, false, 0);
         }
     }
     [ClientRpc]

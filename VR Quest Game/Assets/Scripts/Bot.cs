@@ -299,7 +299,7 @@ public class Bot : NetworkBehaviour
         }
     } //FINISHED
     [ClientRpc]
-    private void setMoveTowards(Vector3 start, Vector3 end)
+    private void RpcSetMoveTowards(Vector3 start, Vector3 end)
     {
         moveTowardsStartLocation = start;
         moveTowardsEndLocation = end;
@@ -313,7 +313,7 @@ public class Bot : NetworkBehaviour
             if (distanceBetween(body.transform.position, agent.transform.position) >= 0.5f)
             {
                 //first teleport to your agent               
-                setMoveTowards(body.transform.position, agent.transform.position);
+                RpcSetMoveTowards(body.transform.position, agent.transform.position);
                 body.transform.rotation = agent.transform.rotation;
             }                
             //then check if you are close enough to the destination
@@ -450,10 +450,10 @@ public class Bot : NetworkBehaviour
     {
         curDestination = spawnLocation;
         agent.Warp(spawnLocation);
-        spawnBody(agent.transform.position);
+        RpcSpawnBody(agent.transform.position);
     }
     [ClientRpc]
-    private void spawnBody(Vector3 spawnLocation)
+    private void RpcSpawnBody(Vector3 spawnLocation)
     {
         this.transform.position = spawnLocation;
     }

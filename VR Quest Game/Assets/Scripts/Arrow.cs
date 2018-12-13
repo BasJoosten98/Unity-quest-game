@@ -16,7 +16,7 @@ public class Arrow : NetworkBehaviour {
     private GameObject abilityIndicator;
     private bool abilityIsTriggered;
     private bool arrowIsShot;
-
+    private bool isMyArrow;
     //properties
     public float Speed { get { return this.speed; } }
     public Ability Ability { get { return this.ability; } }
@@ -26,27 +26,32 @@ public class Arrow : NetworkBehaviour {
     {
         abilityIndicator = this.transform.GetChild(0).gameObject;
     }
+    public void ThisIsMyArrow()
+    {
+        isMyArrow = true;
+    }
     [Command]
     private void CmdSetAbility(Ability a)
     {
-        SetAbilityLocal(a);
+        //SetAbilityLocal(a);
         RpcSetAbility(a);
     }
     [ClientRpc]
     private void RpcSetAbility(Ability a)
     {
-        if (!isLocalPlayer)
+        if (!isMyArrow)
         {
             SetAbilityLocal(a);
         }
     }
     public void SetAbility(Ability a)
     {
-        if (isLocalPlayer)
+        if (isMyArrow)
         {
             SetAbilityLocal(a);
             CmdSetAbility(a);
         }
+        else { Debug.LogWarning("Non local player: Arrow.SetAbility()"); }
     }
     private void SetAbilityLocal(Ability a)
     {
@@ -80,18 +85,19 @@ public class Arrow : NetworkBehaviour {
     [ClientRpc]
     private void RpcTriggerAbility()
     {
-        if (!isLocalPlayer)
+        if (!isMyArrow)
         {
             triggerAbilityLocal();
         }
     }
     public void TriggerAbility()
     {
-        if (isLocalPlayer)
+        if (isMyArrow)
         {
             triggerAbilityLocal();
             CmdTriggerAbility();
         }
+        else { Debug.LogWarning("Non local player: Arrow.TriggerAbility()"); }
     }
     private void triggerAbilityLocal()
     {

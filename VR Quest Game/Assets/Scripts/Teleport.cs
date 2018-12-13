@@ -14,32 +14,42 @@ public class Teleport : MonoBehaviour {
         this.myVRRig = this.GetComponent<VRRig>();
     }
     //methods
-    public bool TeleportTo(Vector3 location, bool atBottom, bool checkSpace, bool animated)
+    public bool TeleportTo(Vector3 location, bool atBottom, bool checkSpace, bool animated, int maxHeight)
     {
         Vector3 teleportLocation = location; 
         if (!atBottom)
         {
+            int layerMask = 1; //evironment
             RaycastHit hit;
-            if (Physics.Raycast(teleportLocation, -Vector3.up, out hit, 8))
+            if (Physics.Raycast(teleportLocation + Vector3.up*0.1f, -Vector3.up, out hit, maxHeight, layerMask))
             {
                 if (measureSurface(hit))
                 {
                     teleportLocation = hit.point;
                 }
-                else { teleportLocation = Vector3.zero; }
+                else { teleportLocation = Vector3.zero; Debug.Log("Teleport failed: surface is too steep"); }
 
             }
-            else { teleportLocation = Vector3.zero; }
+            else { teleportLocation = Vector3.zero; Debug.Log("Teleport failed: no surface found"); }
         }
         if (checkSpace && teleportLocation != Vector3.zero)
         {
+            int layerMask = 1; //evironment
             RaycastHit boxHit;
             float maxDistance = myVRRig.Head.transform.position.y - myVRRig.transform.position.y - 0.7f;
             if (maxDistance < 0) { maxDistance = 0; }
-            if (Physics.BoxCast(teleportLocation + Vector3.up * 0.7f, new Vector3(0.2f, 0.2f, 0.2f), Vector3.up, out boxHit, Quaternion.Euler(0, 0, 0), maxDistance)) 
+            if (Physics.BoxCast(teleportLocation + Vector3.up * 0.7f, new Vector3(0.2f, 0.2f, 0.2f), Vector3.up, out boxHit, Quaternion.Euler(0, 0, 0), maxDistance, layerMask)) 
             {
                 //there is something in the way, DON'T TELEPORT
                 teleportLocation = Vector3.zero;
+                Debug.Log("Teleport failed: too little space for player (evironment)");
+            }
+            layerMask = 11; //other players or himself
+            if (Physics.BoxCast(teleportLocation + Vector3.up * 0.7f, new Vector3(0.2f, 0.2f, 0.2f), Vector3.up, out boxHit, Quaternion.Euler(0, 0, 0), maxDistance, layerMask))
+            {
+                //there is something in the way, DON'T TELEPORT
+                teleportLocation = Vector3.zero;
+                Debug.Log("Teleport failed: too little space for player (other player)");
             }
         }
         if (teleportLocation != Vector3.zero) //doing the actual teleportation

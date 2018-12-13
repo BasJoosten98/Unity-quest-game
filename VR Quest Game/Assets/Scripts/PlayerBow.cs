@@ -1,9 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Networking;
 
-public class PlayerBow : NetworkBehaviour
+public class PlayerBow : MonoBehaviour
 {
 
     //fields
@@ -15,13 +14,15 @@ public class PlayerBow : NetworkBehaviour
     private List<GameObject> flyingArrows;
     private GameObject newArrow;
     private Vector3 midOriginalPos;
+    private bool isMyBow;
 
-    [SyncVar]
+    //[SyncVar]
     private bool bowIsBeingUsed;
 
     //properties
     public bool BowIsBeingUsed { get { return this.bowIsBeingUsed; } }
     public Transform midPoint { get { return this.points[1]; } }
+
 
     //methods
     void Start()
@@ -38,9 +39,13 @@ public class PlayerBow : NetworkBehaviour
 
         drawNewPoints();
     }
+    public void ThisIsMyBow()
+    {
+        isMyBow = true;
+    }
     void FixedUpdate()
     {
-        if (isLocalPlayer)
+        if (isMyBow)
         {
             if (bowIsBeingUsed)
             {
@@ -50,14 +55,12 @@ public class PlayerBow : NetworkBehaviour
                     {
                         resetBowString();
                         newArrow = null;
-                        bowIsBeingUsed = false;
                     }
                     drawNewPoints();
                 }
                 else
                 {
                     resetBowString();
-                    bowIsBeingUsed = false;
                 }
             }
             if (flyingArrows.Count > 0)
@@ -67,7 +70,7 @@ public class PlayerBow : NetworkBehaviour
         }
         else
         {
-            if (BowIsBeingUsed)
+            if (bowIsBeingUsed)
             {
                 drawNewPoints();
             }
@@ -100,7 +103,7 @@ public class PlayerBow : NetworkBehaviour
     } 
     public GameObject getFlyingArrowWithAbility()
     {
-        if (isLocalPlayer)
+        if (isMyBow)
         {
             for (int i = 0; i < flyingArrows.Count; i++)
             {
@@ -110,7 +113,7 @@ public class PlayerBow : NetworkBehaviour
                 }
             }
         }
-        else { Debug.LogWarning("Non local player: PlayerBow.getFlyingArrowWithAbility " + Time.frameCount); }
+        else { Debug.LogWarning("Non bow owner: PlayerBow.getFlyingArrowWithAbility " + Time.frameCount); }
         return null;
     }
     private void translateArrows()
@@ -163,38 +166,30 @@ public class PlayerBow : NetworkBehaviour
         }
         return false;
     }
-    public bool ReleaseString()
+    public bool ReleaseString(out float distance)
     {
         if (bowIsBeingUsed)
         {
             Vector3 currentPos = midPoint.localPosition; //string pull start point
             Vector3 destination = midOriginalPos; //string pull end point
-            float distance = Mathf.Abs(Mathf.Abs(destination.z) - Mathf.Abs(currentPos.z));
+            distance = Mathf.Abs(Mathf.Abs(destination.z) - Mathf.Abs(currentPos.z));
             if (distance >= 0.35f) //string is streched far enough, SHOOT IT
-            {
-                CmdstartShootArrow(distance);
-                StartCoroutine("ShootArrow");
+            {              
+                StartCoroutine("ShootArrow", distance);
                 return true;
             }          
         }
+        distance = -1;
         newArrow.transform.parent = null;
         this.transform.parent.GetComponent<Player>().AttachArrowToHand(newArrow);
         newArrow = null;
         return false;
     }
-    [Command]
-    private void CmdstartShootArrow(float distance)
+    public void shootArrow(float distance)
     {
-        RpcstartShootArrow(distance);
+        StartCoroutine("ShootArrow", distance);
     }
-    [ClientRpc]
-    private void RpcstartShootArrow(float distance)
-    {
-        if (!isLocalPlayer)
-        {
-            StartCoroutine("ShootArrow", distance);           
-        }
-    }
+    
     private IEnumerator ShootArrow(float distance)
     {
         Vector3 currentPos;

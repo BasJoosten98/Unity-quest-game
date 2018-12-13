@@ -92,8 +92,8 @@ public class ControllerInput : MonoBehaviour {
             player = p;
         }
     }  
-    public bool TeleportTo(Vector3 location, bool atBottom, bool checkSpace, bool animated)
+    public bool TeleportTo(Vector3 location, bool atBottom, bool checkSpace, bool animated, int maxHeight)
     {
-        return teleport.TeleportTo(location, atBottom, checkSpace, animated);
+        return teleport.TeleportTo(location, atBottom, checkSpace, animated, maxHeight);
     }
 }

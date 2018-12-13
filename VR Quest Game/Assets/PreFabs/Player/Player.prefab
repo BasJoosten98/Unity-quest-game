@@ -19,7 +19,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4865906524850262}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: BottomPoint
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -36,7 +36,7 @@ GameObject:
   - component: {fileID: 4038105826445052}
   - component: {fileID: 33635213621258120}
   - component: {fileID: 23318343027550152}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: PropArrow
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -51,7 +51,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4589443566828862}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: TopPoint
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -70,7 +70,7 @@ GameObject:
   - component: {fileID: 23140721572752080}
   - component: {fileID: 54084528061062244}
   - component: {fileID: 65534204131016246}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Body
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -87,6 +87,7 @@ GameObject:
   - component: {fileID: 4609217168040812}
   - component: {fileID: 114256694216515412}
   - component: {fileID: 114053009209871012}
+  - component: {fileID: 114476921321604798}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -106,7 +107,7 @@ GameObject:
   - component: {fileID: 23966153980244046}
   - component: {fileID: 54100034885046844}
   - component: {fileID: 65779157542084888}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Head
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -127,7 +128,7 @@ GameObject:
   - component: {fileID: 120094635013751174}
   - component: {fileID: 65507577381301466}
   - component: {fileID: 54494693714159442}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Bow
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -144,7 +145,7 @@ GameObject:
   - component: {fileID: 4632681327457556}
   - component: {fileID: 33231937387475236}
   - component: {fileID: 23009784391828416}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: DeadCamFilter
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -161,7 +162,7 @@ GameObject:
   - component: {fileID: 4092734628368342}
   - component: {fileID: 33322521914607684}
   - component: {fileID: 23097875188074108}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Eyes
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -176,7 +177,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4362490853387742}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: MidPoint
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -258,7 +259,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1365529785685204}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 6.4634304, y: -0.79474133, z: 2.5383952}
+  m_LocalPosition: {x: 6.610784, y: -0.79474133, z: 4.2535076}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 4657055118997916}
@@ -700,6 +701,27 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ArrowPrefab: {fileID: 1773681281956108, guid: c6e27528aa5cee841b8b2fa4196924f1,
     type: 2}
+--- !u!114 &114476921321604798
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1365529785685204}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1768714887, guid: dc443db3e92b4983b9738c1131f555cb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_TransformSyncMode: 1
+  m_SendInterval: 0.1
+  m_SyncRotationAxis: 7
+  m_RotationSyncCompression: 0
+  m_SyncSpin: 0
+  m_MovementTheshold: 0.001
+  m_VelocityThreshold: 0.0001
+  m_SnapThreshold: 5
+  m_InterpolateRotation: 1
+  m_InterpolateMovement: 1
 --- !u!114 &114949564517634678
 MonoBehaviour:
   m_ObjectHideFlags: 1

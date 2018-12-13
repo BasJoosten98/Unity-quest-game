@@ -19,9 +19,7 @@ public class ParticipantManager : NetworkBehaviour {
     private bool fillWithBots;
     private WaitForSecondsRealtime fillBotWait;
 
-    [SyncVar]
     private static bool movementAllowed;
-    [SyncVar]
     private static bool grabbingAndShootingAllowed;
     private static bool selfRespawnAllowed;
     
@@ -196,13 +194,23 @@ public class ParticipantManager : NetworkBehaviour {
     [Server]
     public void AllowMovement(bool allowed)
     {
-        movementAllowed = allowed;
+        RpcSetAllowMovement(allowed);
     }
     [Server]
     public void AllowGrabbingArrowsAndShooting(bool allowed)
     {
-        grabbingAndShootingAllowed = allowed;
+        RpcSetAllowGrabbingArrowsAndShooting(allowed);
         if (allowed) { bds.DetectionOn(); }
         else { bds.DetectionOff(); }
+    }
+    [ClientRpc]
+    private void RpcSetAllowGrabbingArrowsAndShooting(bool allowed)
+    {
+        grabbingAndShootingAllowed = allowed;
+    }
+    [ClientRpc]
+    private void RpcSetAllowMovement(bool allowed)
+    {
+        movementAllowed = allowed;
     }
 }
