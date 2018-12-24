@@ -35,24 +35,24 @@ public class ParticipantHelper : NetworkBehaviour
     {
         if (ParticipantManager.GrabbingAndShootingAllowed)
         {
-            if (Hit.gameObject.GetComponent<Health>().takeDamage(damageAmount)) //damage has been accepted (participant was alive before arrow hit)
+            if (Hit.HealthStats.takeDamage(damageAmount)) //damage has been accepted (participant was alive before arrow hit)
             {
-                if (Hit.gameObject.GetComponent<Health>().Lives <= 0)
+                if (Hit.HealthStats.Lives <= 0)
                 {
                     pm.ReportKill(Shooter, Hit);
                     if (Hit.IsPlayer)
                     {
-                        Hit.GetComponent<Player>().RpcDie();
+                        Hit.MainObject.GetComponent<Player>().RpcDie();
                     }
                     else
                     {
-                        Hit.GetComponent<Bot>().RpcDie();
+                        Hit.MainObject.GetComponent<Bot>().RpcDie();
                     }
-                    if (ParticipantManager.SelfRespawnAllowed) { StartCoroutine("respawnTimer", Hit.gameObject); }
+                    if (ParticipantManager.SelfRespawnAllowed) { StartCoroutine("respawnTimer", Hit); }
                 }
-                else if (Hit.GetComponent<Bot>() && Shooter.Team != Hit.Team) //if the one that got shot is a bot, WARN HIM
+                else if (Hit.MainObject.GetComponent<Bot>() && Shooter.Team != Hit.Team) //if the one that got shot is a bot, WARN HIM
                 {
-                    Hit.GetComponent<Bot>().Attack(Shooter.gameObject);
+                    Hit.MainObject.GetComponent<Bot>().Attack(Shooter);
                 }
             }
         }
@@ -130,22 +130,30 @@ public class ParticipantHelper : NetworkBehaviour
     [Command]
     public void CmdRegisterPlayer(NetworkInstanceId NetID, string Name)
     {
-        GameObject me = NetworkServer.FindLocalObject(netId);
-        pm.RegisterPlayer(me, Name);
-        me.GetComponent<Player>().RpcCheckMaterials(me.GetComponent<ParticipantID>().Team);
-        me.GetComponent<Player>().RpcSpawn(GetSpawnPoint());
+        GameObject me = NetworkServer.FindLocalObject(NetID);
+        ParticipantID myID = pm.RegisterPlayer(me, Name);
+        if (myID != null)
+        {
+            SpawnPlayerWithMaterials(myID);
+        }       
     } 
-    private IEnumerator respawnTimer(GameObject hit)
+    [Server]
+    public void SpawnPlayerWithMaterials(ParticipantID myID)
+    {
+        myID.MainObject.GetComponent<Player>().RpcCheckMaterials(myID.Team);
+        myID.MainObject.GetComponent<Player>().RpcSpawn(GetSpawnPoint());
+    }
+    private IEnumerator respawnTimer(ParticipantID hit)
     {
         respawnWait = new WaitForSecondsRealtime(respawnTime);
         yield return respawnWait;
         respawnParticipant(hit);
     }
     [Server]
-    private void respawnParticipant(GameObject participant)
+    private void respawnParticipant(ParticipantID participant)
     {
-        participant.GetComponent<Health>().Revive();
-        if (participant.GetComponent<ParticipantID>().IsPlayer) { participant.GetComponent<Player>().RpcRespawn(GetSpawnPoint()); }
-        else { participant.GetComponent<Bot>().Respawn(GetSpawnPoint()); }
+        participant.HealthStats.Revive();
+        if (participant.IsPlayer) { participant.MainObject.GetComponent<Player>().RpcRespawn(GetSpawnPoint()); }
+        else { participant.MainObject.GetComponent<Bot>().Respawn(GetSpawnPoint()); }
     }
 }

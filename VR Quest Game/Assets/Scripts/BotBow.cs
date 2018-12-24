@@ -50,10 +50,7 @@ public class BotBow : NetworkBehaviour {
     [Server]
     public void SetOwner(ParticipantID id)
     {
-        if(owner == null)
-        {
-            owner = id;
-        }
+        owner = id;
     } 
     public void SetArrowMaterial(Material m)
     {
@@ -98,7 +95,7 @@ public class BotBow : NetworkBehaviour {
         lr.SetPosition(2, points[2].localPosition);
     }
     [Server]
-    public void BotShot()
+    public GameObject createArrow()
     {
         if (!bowIsBeingUsed)
         {
@@ -109,21 +106,20 @@ public class BotBow : NetworkBehaviour {
             newArrow.GetComponent<Transform>().rotation = points[1].GetComponent<Transform>().rotation;
             newArrow.GetComponent<Transform>().localPosition = Vector3.zero + (Vector3.forward * newArrow.GetComponent<BoxCollider>().size.z / 2);
 
-            NetworkServer.Spawn(newArrow);
-
-            newArrow.GetComponent<Arrow>().SetShooter(owner);
-            RpcBotShot();
-
+            return newArrow;
+            
             //de bound size is verkeerd doordat Bow een scale van 100 heeft. hierdoor word de bound size van arrow ook 100x groter (world space). dit is niet het geval met collider.size (local space).
             //Debug.Log("Mesh renderer: " + newArrow.GetComponent<MeshRenderer>().bounds.size.z);
             //Debug.Log("Renderer: " + newArrow.GetComponent<Renderer>().bounds.size.z);
             //Debug.Log("Box Collider: " + newArrow.GetComponent<BoxCollider>().bounds.size.z);
             //Debug.Log("Box Collider: " + newArrow.GetComponent<BoxCollider>().size.z);
         }
+        return null;
     }
-    [ClientRpc]
-    private void RpcBotShot()
+    public void BotShotForClient(GameObject arrow)
     {
+        newArrow = arrow;
+        bowIsBeingUsed = true;
         StartCoroutine("botShootArrow");
     }
     private IEnumerator botShootArrow()

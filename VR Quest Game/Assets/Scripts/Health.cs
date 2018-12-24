@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Health : MonoBehaviour {
+public class Health {
     //fields
     private int lives;
 
@@ -10,10 +10,11 @@ public class Health : MonoBehaviour {
     public int Lives { get { return this.lives; } }
 
     //methods
-    private void Start()
+    public Health()
     {
-        Revive();
+        lives = 2;
     }
+
     public bool takeDamage(int damageAmount)
     {
         if(lives > 0)

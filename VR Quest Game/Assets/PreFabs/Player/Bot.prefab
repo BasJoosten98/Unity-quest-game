@@ -174,6 +174,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4607670417803048}
   - component: {fileID: 114212181119882766}
+  - component: {fileID: 114624602260976976}
   m_Layer: 0
   m_Name: Bot
   m_TagString: Untagged
@@ -651,6 +652,38 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 464e5bbebffd6414d98f2b04a44541d5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &114624602260976976
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1837715616795314}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 372142912, guid: dc443db3e92b4983b9738c1131f555cb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_SceneId:
+    m_Value: 0
+  m_AssetId:
+    i0: 207
+    i1: 29
+    i2: 56
+    i3: 206
+    i4: 195
+    i5: 221
+    i6: 123
+    i7: 52
+    i8: 186
+    i9: 78
+    i10: 191
+    i11: 129
+    i12: 130
+    i13: 210
+    i14: 94
+    i15: 129
+  m_ServerOnly: 1
+  m_LocalPlayerAuthority: 0
 --- !u!114 &114704195460915260
 MonoBehaviour:
   m_ObjectHideFlags: 1

@@ -20,12 +20,12 @@ public class ScoreboardSystem : NetworkBehaviour {
     private WaitForSeconds statsHoldUp;
 
     //properties
-    public static ParticipantID[] IDs { get { return ids; } }
+    public ParticipantID[] IDs { get { return ids; } }
     public static string[] Names { get { return names; } }
     public static int[] Kills { get { return kills; } }
     public static int[] Deads { get { return deads; } }
-    public static int RedTeamScore { get { return redTeamScore; } }
-    public static int BlueTeamScore { get { return blueTeamScore; } }
+    public int RedTeamScore { get { return redTeamScore; } }
+    public int BlueTeamScore { get { return blueTeamScore; } }
     public static bool EnemiesAreTeamBased { get { return enemiesAreTeamBased; } }
     public static int TeamSize { get { return teamSize; } }
     private int NextAvailableID(Team team)
@@ -34,14 +34,29 @@ public class ScoreboardSystem : NetworkBehaviour {
         {
             for (int i = 0; i < teamSize; i++)
             {
-                if (ids[i] == null) { return i + 1; }
+                if(ids != null)
+                { 
+                    if (ids[i] == null) { return i + 1; }
+                }
+                else
+                {
+                    return -1;
+                    
+                }
             }
         }
         else
         {
-            for (int i = teamSize-1; i < ids.Length; i++)
+            for (int i = teamSize; i < ids.Length; i++)
             {
-                if (ids[i] == null) { return i + 1; }
+                if (ids != null)
+                {
+                    if (ids[i] == null) { return i + 1; }
+                }
+                else
+                {
+                    return -1;
+                }
             }
         }
         return -1;
@@ -65,7 +80,14 @@ public class ScoreboardSystem : NetworkBehaviour {
             int counter = 0;
             for (int i = 0; i < ids.Length; i++)
             {
-                if (ids[i] != null && ids[i].Team == Team.Blue) { counter++; }
+                if (ids[i] != null)
+                {
+                    if (ids[i].Team == Team.Blue)
+                    {
+                        counter++;
+                    }
+                }
+                
             }
             return counter;
         }
@@ -77,7 +99,13 @@ public class ScoreboardSystem : NetworkBehaviour {
             int counter = 0;
             for (int i = 0; i < ids.Length; i++)
             {
-                if (ids[i] != null && ids[i].Team == Team.Red) { counter++; }
+                if (ids[i] != null)
+                {
+                    if (ids[i].Team == Team.Red)
+                    {
+                        counter++;
+                    }
+                }
             }
             return counter;
         }
@@ -102,17 +130,26 @@ public class ScoreboardSystem : NetworkBehaviour {
     [Server]
     public void GetNextParticipantStats(out int id, out Team team, out int spawnNumber)
     {
-        if(TotalBlueParticipants <= TotalRedParticipants)
+        if (TotalParticipants < ids.Length)
         {
-            team = Team.Blue;
-            id = NextAvailableID(team);
-            spawnNumber = id - 1;
+            if (TotalBlueParticipants <= TotalRedParticipants) //give blue participant info
+            {
+                team = Team.Blue;
+                id = NextAvailableID(team);
+                spawnNumber = id - 1;
+            }
+            else //give red participant info
+            {
+                team = Team.Red;
+                id = NextAvailableID(team);
+                spawnNumber = id - teamSize - 1;
+            }
         }
         else
         {
             team = Team.Red;
-            id = NextAvailableID(team);
-            spawnNumber = id - teamSize - 1;
+            id = -1;
+            spawnNumber = -1;
         }
     }
     [Server]
@@ -170,35 +207,39 @@ public class ScoreboardSystem : NetworkBehaviour {
     }
     private IEnumerator sendStats()
     {
-        statsHoldUp = new WaitForSeconds(3);
-        yield return statsHoldUp;
-        string[] newNames = null;
-        int[] newKills = null;
-        int[] newDeads = null;
-        if (namesChanged) { newNames = names; }
-        if (killsChanged) { newKills = kills; }
-        if (deadsChanged) { newDeads = deads; }
-        RpcSendStats(newNames, newKills, newDeads);
-        namesChanged = false;
-        killsChanged = false;
-        deadsChanged = false;
+        while (true)
+        {
+            string[] newNames = null;
+            int[] newKills = null;
+            int[] newDeads = null;
+            if (namesChanged) { newNames = names; }
+            if (killsChanged) { newKills = kills; }
+            if (deadsChanged) { newDeads = deads; }
+            RpcSendStats(newNames, newKills, newDeads);
+            namesChanged = false;
+            killsChanged = false;
+            deadsChanged = false;
+
+            statsHoldUp = new WaitForSeconds(3);
+            yield return statsHoldUp;
+        }
     }
     [ClientRpc]
-    private void RpcSendStats(string[] Names, int[] Kills, int[] Deads)
+    private void RpcSendStats(string[] newNames, int[] newKills, int[] newDeads)
     {
         if (!isServer)
         {
-            if(Names != null)
+            if(newNames != null)
             {
-                names = Names;
+                names = newNames;
             }
-            if(Kills != null)
+            if(newKills != null)
             {
-                kills = Kills;
+                kills = newKills;
             }
-            if(Deads != null)
+            if(newDeads != null)
             {
-                deads = Deads;
+                deads = newDeads;
             }
         }
     }

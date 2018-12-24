@@ -2,18 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class TeamDeathMatch : MonoBehaviour {
+public class TeamDeathMatch : GameModeBasis {
 
-    private ParticipantManager pm;
-    private ScoreboardSystem ss;
-    private WaitForSecondsRealtime gameTime;
-    private WaitForSecondsRealtime startupTime;
-    
-	void Awake () {
-        if(!SetGame(240, 2, false)) { Debug.Log("SetGame FAILED"); }
-	}
-
-    private bool SetGame(int gameTimeInSeconds, int teamSize, bool withBots)
+    public override bool SetGame(int gameTimeInSeconds, int teamSize, bool withBots)
     {
         if (this.GetComponent<ParticipantManager>()) { pm = this.GetComponent<ParticipantManager>(); } else { return false; }
         if (this.GetComponent<ScoreboardSystem>()) { ss = this.GetComponent<ScoreboardSystem>(); } else { return false; }
@@ -32,12 +23,12 @@ public class TeamDeathMatch : MonoBehaviour {
         yield return gameTime; //actual game time
         endGame();
     }
-    private void startGame()
+    public override void startGame()
     {
         pm.StartGame();
         Debug.Log("Game has started");
     }
-    private void endGame()
+    public override void endGame()
     {
         pm.AllowMovement(false);
         pm.AllowGrabbingArrowsAndShooting(false);

@@ -7,6 +7,7 @@ public class MenuSystem : MonoBehaviour {
 
     //fields
     public GameObject participantLine;
+    public Transform participantList; 
     private RectTransform rtpl;
     private int updateCounter;
     private bool menuIsOpened;
@@ -66,49 +67,72 @@ public class MenuSystem : MonoBehaviour {
     } //this was the old way of doing it
     private void updateStats()
     {
+        bool newSlotsMade = false;
         GameObject child;
         for (int i = 0; i < ScoreboardSystem.TeamSize * 2; i++)
         {
             if (ScoreboardSystem.Names[i] != null)
             {
-                if (i < this.transform.childCount) //blue team
+                if (i < this.participantList.childCount) 
                 {
-                    child = this.transform.GetChild(i).gameObject;
+                    child = this.participantList.GetChild(i).gameObject;
+
                     child.GetComponent<Text>().text = ScoreboardSystem.Names[i];
                     child.transform.GetChild(0).GetComponent<Text>().text = ScoreboardSystem.Kills[i].ToString();
                     child.transform.GetChild(1).GetComponent<Text>().text = ScoreboardSystem.Deads[i].ToString();
                 }
-                else { Debug.LogWarning("i was bigger/equal than childCount! MenuSystem.updateStats"); }
+                else if(!newSlotsMade)
+                {
+                    int count = 0;
+                    for(int j = participantList.childCount - 1; j >= 1; j--)
+                    {
+                        Destroy(participantList.GetChild(j));
+                        count++;
+                    }
+                    Debug.Log("MenuSystem: " + count + " slots have been removed");
+                    createParticipantLines(ScoreboardSystem.TeamSize);
+                    i = 0;
+                    newSlotsMade = true;
+                }
+                else
+                {
+                    Debug.Log("MenuSystem: Slots and teamsize don't match each other!");
+                }
             }
         }
     }
     private void createParticipantLines(int teamSize)
     {
+        int count = 0;
         GameObject newLine;
         Vector3 startRed = new Vector3(0.575f, 0, 0);
         Vector3 heightDifference = Vector3.up * rtpl.localScale.z * rtpl.sizeDelta.y;
         for (int b = 1; b < teamSize; b++) //blue team side, 1 example has already been placed (so b = 1)
         {
             newLine = Instantiate(participantLine);
-            newLine.transform.parent = this.transform;
+            newLine.GetComponent<RectTransform>().SetParent(this.participantList);
             newLine.GetComponent<RectTransform>().localRotation = rtpl.localRotation;
             newLine.GetComponent<RectTransform>().localScale = rtpl.localScale;
             newLine.GetComponent<RectTransform>().localPosition = rtpl.localPosition - b * heightDifference;
             newLine.GetComponent<Text>().text = "";
             newLine.transform.GetChild(0).GetComponent<Text>().text = "";
             newLine.transform.GetChild(1).GetComponent<Text>().text = "";
+            count++;
         }
         for(int r = 0; r < teamSize; r++) //red team side
         {
             newLine = Instantiate(participantLine);
-            newLine.transform.parent = this.transform;
+            newLine.GetComponent<RectTransform>().SetParent(this.participantList);
+            //newLine.transform.parent = this.participantList;
             newLine.GetComponent<RectTransform>().localRotation = rtpl.localRotation;
             newLine.GetComponent<RectTransform>().localScale = rtpl.localScale;
             newLine.GetComponent<RectTransform>().localPosition = rtpl.localPosition - r * heightDifference + startRed;
             newLine.GetComponent<Text>().text = "";
             newLine.transform.GetChild(0).GetComponent<Text>().text = "";
             newLine.transform.GetChild(1).GetComponent<Text>().text = "";
+            count++;
         }
+        Debug.Log("MenuSystem: printed " + count + " slots. total slots: " + participantList.childCount);
     }
     public void TurnOffMenu()
     {

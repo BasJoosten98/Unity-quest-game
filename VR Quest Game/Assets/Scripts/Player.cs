@@ -42,15 +42,25 @@ public class Player : NetworkBehaviour
             bodyBottomToFloorCalculationPart = body.GetComponent<BoxCollider>().size.y * body.transform.localScale.z;
         }
 
+        if (isServer)
+        {
+            if(!GameStartManager.GSM.SetGame(120, 2, true, GameMode.Team_deathmatch))
+            {
+                Debug.LogWarning("GSM failed to set game");
+            }
+            
+        }
+
         if (isLocalPlayer)
         {
             if (myVRRig != null) { myVRRig.ConInput.SetPlayer(this); }
             bow.GetComponent<PlayerBow>().ThisIsMyBow();
-            //ParticipantHelper.PH.CmdRegisterPlayer(this.netId, "Bas Joosten");
+            ParticipantHelper.PH.CmdRegisterPlayer(this.gameObject.GetComponent<NetworkIdentity>().netId, "Bas Joosten");
             //bow.GetComponent<PlayerBow>().SetOwner(this.GetComponent<ParticipantID>()); //clients don't own an ID, the sever does!
             //checkMaterials(); //will be done by the server in CmdRegisterPlayer
             //myVRRig.Head.GetComponent<BoxCollider>().enabled = false; //is not possible
             head.GetComponent<MeshRenderer>().enabled = false;
+            head.GetComponent<BoxCollider>().enabled = false;
         }
     }
     public void SetOrTriggerAbility(Ability a)
@@ -206,10 +216,10 @@ public class Player : NetworkBehaviour
     [Command]
     private void CmdSpawnArrowInHand()
     {
-        //GameObject newArrow = GameObject.Instantiate(ArrowPrefab, myVRRig.RightHand.transform.position, myVRRig.RightHand.transform.rotation); not possible(myVRRig is unknown on server/locals)
+        //GameObject newArrow = GameObject.Instantiate(ArrowPrefab, myVRRig.RightHand.transform.position, myVRRig.RightHand.transform.rotation); not possible(myVRRig is unknown on server)
         GameObject newArrow = GameObject.Instantiate(ArrowPrefab, transform.position  + transform.forward.normalized, transform.rotation);
         newArrow.GetComponent<MeshRenderer>().material = body.transform.GetChild(0).GetComponent<MeshRenderer>().material; //PropArrow Material
-        if (this.GetComponent<ParticipantID>()) { newArrow.GetComponent<Arrow>().SetShooter(this.GetComponent<ParticipantID>()); }
+        newArrow.GetComponent<Arrow>().SetShooter(ParticipantHelper.PH.getIDByBodyPart(this.gameObject)); 
         NetworkServer.SpawnWithClientAuthority(newArrow, this.GetComponent<NetworkIdentity>().connectionToClient);
 
         RpcSetArrow(newArrow.GetComponent<NetworkIdentity>().netId);
@@ -327,7 +337,7 @@ public class Player : NetworkBehaviour
     {
         if (isLocalPlayer)
         {
-            myVRRig.ConInput.TeleportTo(location, false, false, false, 0);
+            myVRRig.ConInput.TeleportTo(location, false, false, false, 6);
         }
     }
     [ClientRpc]
@@ -365,8 +375,12 @@ public class Player : NetworkBehaviour
     {
         trackVRRig = false;
         deadFilter.SetActive(true);
+        if (isLocalPlayer)
+        {
+            head.GetComponent<MeshRenderer>().enabled = true;
+        }
         bow.GetComponent<PlayerBow>().ResetBow();
-        myVRRig.Head.GetComponent<BoxCollider>().enabled = true;
+        head.GetComponent<BoxCollider>().enabled = true;
         body.GetComponent<Rigidbody>().isKinematic = false;
         body.GetComponent<Rigidbody>().useGravity = true;
         body.GetComponent<BoxCollider>().isTrigger = false;
@@ -396,7 +410,12 @@ public class Player : NetworkBehaviour
         bow.GetComponent<Rigidbody>().isKinematic = true;
         bow.GetComponent<Rigidbody>().useGravity = false;
         bow.GetComponent<BoxCollider>().enabled = false;
-        myVRRig.Head.GetComponent<BoxCollider>().enabled = false;       
+        head.GetComponent<BoxCollider>().enabled = false;
+
+        if (isLocalPlayer)
+        {
+            head.GetComponent<MeshRenderer>().enabled = false;
+        }
         trackVRRig = true;
     }
 }

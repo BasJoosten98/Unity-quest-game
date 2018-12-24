@@ -6,7 +6,7 @@ using UnityEngine.Networking;
 public class Bot : NetworkBehaviour
 {
     //fields
-    private GameObject huntTargetMain; //contain scripts like ID and Health
+    private ParticipantID huntTargetID; //contain scripts like ID and Health
     private GameObject huntTargetBody; //the actual body of the target
     private Vector3 huntTargetLastSeen;
 
@@ -22,6 +22,7 @@ public class Bot : NetworkBehaviour
     private Vector3 moveTowardsEndLocation;
     private Vector3 moveTowardsStartLocation;
 
+    private ParticipantID botID;
     private BotStatus status;
     private bool botHasBeenSet;
     private bool botIsActive;
@@ -126,9 +127,9 @@ public class Bot : NetworkBehaviour
         {
             if (botIsActive)
             {
-                if (huntTargetMain != null && ParticipantManager.GrabbingAndShootingAllowed)
+                if (huntTargetID != null && ParticipantManager.GrabbingAndShootingAllowed)
                 {
-                    if (huntTargetMain.GetComponent<Health>().Lives > 0) //target is alive
+                    if (huntTargetID.HealthStats.Lives > 0) //target is alive
                     {
                         bool newPlayerInSight = false;
                         if (objectInSight(huntTargetBody.GetComponent<Transform>())) //enemy is in eye angle 
@@ -150,12 +151,12 @@ public class Bot : NetworkBehaviour
                             {
                                 agent.isStopped = true;
                                 huntTargetLastSeen = huntTargetBody.GetComponent<Transform>().position;
-                                bow.GetComponent<BotBow>().BotShot();
+                                botShot();
                                 goToLastSeenDistanceCheck = false;
                                 waitHunt = new WaitForSecondsRealtime(2f);
                                 yield return waitHunt;                               
                             }
-                            else //huntTargetMain is NOT in eyesight, Go to last seen place
+                            else //huntTargetID is NOT in eyesight, Go to last seen place
                             {
                                 goToLastSeen();
                                 waitLastSeen = new WaitForSecondsRealtime(2f);
@@ -191,7 +192,7 @@ public class Bot : NetworkBehaviour
             agent.isStopped = true;
             status = BotStatus.Idle;
             huntTargetLastSeen = Vector3.zero;
-            huntTargetMain = null;
+            huntTargetID = null;
             huntTargetBody = null;
             resetLookDirection = true;
             goToLastSeenDistanceCheck = false;
@@ -203,7 +204,7 @@ public class Bot : NetworkBehaviour
     private void RpcStopHunt()
     {
         huntTargetLastSeen = Vector3.zero;
-        huntTargetMain = null;
+        huntTargetID = null;
         huntTargetBody = null;
         resetLookDirection = true;
         goToLastSeenDistanceCheck = false;
@@ -229,16 +230,16 @@ public class Bot : NetworkBehaviour
         }
     } //FINISHED
     [Server]
-    public void Attack(GameObject targetMain)
+    public void Attack(ParticipantID target)
     {
         if (botIsActive)
         {
-            if (targetMain.GetComponent<ParticipantID>().Team != this.GetComponent<ParticipantID>().Team)
+            if (target.Team != botID.Team)
             {
-                RpcSetTarget(targetMain.GetComponent<NetworkIdentity>().netId);
+                RpcSetTarget(target.MainObject.GetComponent<NetworkIdentity>().netId);
                 agent.isStopped = true;
-                huntTargetMain = targetMain;
-                huntTargetBody = targetMain.transform.GetChild(0).gameObject;
+                huntTargetID = target;
+                huntTargetBody = target.MainObject.transform.GetChild(0).gameObject;
                 huntTargetLastSeen = huntTargetBody.transform.position;
                 status = BotStatus.Hunting;
                 resetLookDirection = false;
@@ -250,7 +251,7 @@ public class Bot : NetworkBehaviour
     private void RpcSetTarget(NetworkInstanceId target)
     {
         GameObject targetMain = ClientScene.FindLocalObject(target);
-        huntTargetMain = targetMain;
+        //huntTargetID = targetMain;
         huntTargetBody = targetMain.transform.GetChild(0).gameObject;
         huntTargetLastSeen = huntTargetBody.transform.position;
         status = BotStatus.Hunting;
@@ -277,22 +278,22 @@ public class Bot : NetworkBehaviour
         return Vector2.Angle(eyeDirection, worldSpaceDifference);
     } //cheap method for calculating angle between eyeMidSight and objectDirection
     [Server]
-    public void EnemyWarning(GameObject targetMain)
+    public void EnemyWarning(ParticipantID target)
     {
         if (botIsActive)
         {
             if (status != BotStatus.Hunting)
             {
-                if (objectInSight(targetMain.transform.GetChild(0))) //enemy is in eye angle 
+                if (objectInSight(target.MainObject.transform.GetChild(0))) //enemy is in eye angle 
                 {
                     RaycastHit hit;
-                    Vector3 direction = targetMain.transform.GetChild(0).position - raycastPoint.position;
+                    Vector3 direction = target.MainObject.transform.GetChild(0).position - raycastPoint.position;
 
                     Debug.DrawRay(raycastPoint.position, direction, Color.green, 1f);
                     if (Physics.Raycast(raycastPoint.position, direction, out hit, BotDetectionSystem.WarningDistance))
                     {
                         //If bot model and player model are the same
-                        if (hit.collider.gameObject == targetMain.transform.GetChild(0).gameObject) { Attack(targetMain); } //check body                     
+                        if (hit.collider.gameObject == target.MainObject.transform.GetChild(0).gameObject) { Attack(target); } //check body                     
                     }
                 }
             }
@@ -372,17 +373,18 @@ public class Bot : NetworkBehaviour
         }
     } 
     [Server]
-    public bool SetBot(Vector3 spawnLocation)
+    public bool SetBot(Vector3 spawnLocation, ParticipantID myID)
     {
         if (!botHasBeenSet)
         {
             //fields
+            this.botID = myID;
             this.agent = this.transform.GetChild(1).GetComponent<UnityEngine.AI.NavMeshAgent>();
             this.agent.isStopped = true;
             this.botHasBeenSet = true;
             this.botIsActive = true;
             this.status = BotStatus.Idle;
-            this.bow.GetComponent<BotBow>().SetOwner(this.GetComponent<ParticipantID>());
+            this.bow.GetComponent<BotBow>().SetOwner(botID);
 
             Spawn(spawnLocation);
             goToNextDestination();
@@ -397,6 +399,24 @@ public class Bot : NetworkBehaviour
     {
         Die();
     }
+    [Server]
+    private void botShot()
+    {
+        GameObject arrow = bow.GetComponent<BotBow>().createArrow();
+        if (arrow != null)
+        {
+            NetworkServer.Spawn(arrow);
+            arrow.GetComponent<Arrow>().SetShooter(botID);
+            RpcBotShot(arrow.GetComponent<NetworkIdentity>().netId);
+        }
+    }
+    [ClientRpc]
+    public void RpcBotShot(NetworkInstanceId id) //must be called form botbow script!
+    {
+        GameObject arrow = ClientScene.FindLocalObject(id);
+        bow.GetComponent<BotBow>().BotShotForClient(arrow);
+    }
+
     private void Die()
     {
         botIsActive = false;

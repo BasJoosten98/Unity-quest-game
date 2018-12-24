@@ -7,8 +7,8 @@ public class BotDetectionSystem : MonoBehaviour {
     public delegate void SendData();
     public event SendData GetData;
 
-    private List<GameObject> bots;
-    private List<GameObject> players;
+    private List<ParticipantID> bots;
+    private List<ParticipantID> players;
     private int prevBotCount;
     private int prevPlayerCount;
     private bool isOn;
@@ -32,8 +32,8 @@ public class BotDetectionSystem : MonoBehaviour {
     {
         if (!isOn)
         {
-            if (bots == null) { bots = new List<GameObject>(); }
-            if (players == null) { players = new List<GameObject>(); }
+            if (bots == null) { bots = new List<ParticipantID>(); }
+            if (players == null) { players = new List<ParticipantID>(); }
             prevBotCount = -1;
             waitTime = 0;
             StartCoroutine("warningSystem");
@@ -50,26 +50,26 @@ public class BotDetectionSystem : MonoBehaviour {
             isOn = false;
         }       
     } //FINISHED
-    public void GetBotData(List<GameObject> Bots)
+    public void GetBotData(List<ParticipantID> Bots)
     {
         if(Bots != null)
         {
             bots = Bots;
         }
     } //FINISHED
-    public void GetPlayerData(List<GameObject> Players)
+    public void GetPlayerData(List<ParticipantID> Players)
     {
         if (Players != null)
         {
             players = Players;
         }
     } //FINISHED
-    private bool enemyCheck(GameObject participant1, GameObject participant2)
+    private bool enemyCheck(ParticipantID participant1, ParticipantID participant2)
     {
         if (!ScoreboardSystem.EnemiesAreTeamBased) { return true; } //everyone is your enemy
         else                                       //only the other team is your enemy
         {
-            if(participant1.GetComponent<ParticipantID>().Team == participant2.GetComponent<ParticipantID>().Team) { return false; }
+            if(participant1.Team == participant2.Team) { return false; }
             else { return true; }
         }
     }
@@ -99,10 +99,10 @@ public class BotDetectionSystem : MonoBehaviour {
                         {
                             if(enemyCheck(bots[b1], bots[b2]))
                             {
-                                if (distanceBetween(bots[b1].transform.GetChild(0).position, bots[b2].transform.GetChild(0).position) <= warningDistance)
+                                if (distanceBetween(bots[b1].MainObject.transform.GetChild(0).position, bots[b2].MainObject.transform.GetChild(0).position) <= warningDistance)
                                 {
-                                    bots[b1].GetComponent<Bot>().EnemyWarning(bots[b2]);
-                                    bots[b2].GetComponent<Bot>().EnemyWarning(bots[b1]);
+                                    bots[b1].MainObject.GetComponent<Bot>().EnemyWarning(bots[b2]);
+                                    bots[b2].MainObject.GetComponent<Bot>().EnemyWarning(bots[b1]);
                                 }
                             }                            
                             yield return wait;
@@ -112,9 +112,9 @@ public class BotDetectionSystem : MonoBehaviour {
                         {
                             if (enemyCheck(bots[b1], players[p]))
                             {
-                                if (distanceBetween(bots[b1].transform.GetChild(0).position, players[p].transform.GetChild(0).transform.position) <= warningDistance)
+                                if (distanceBetween(bots[b1].MainObject.transform.GetChild(0).position, players[p].MainObject.transform.GetChild(0).transform.position) <= warningDistance)
                                 {
-                                    bots[b1].GetComponent<Bot>().EnemyWarning(players[p]);
+                                    bots[b1].MainObject.GetComponent<Bot>().EnemyWarning(players[p]);
                                 }
                             }
                             yield return wait;
