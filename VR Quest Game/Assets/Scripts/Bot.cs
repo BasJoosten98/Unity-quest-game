@@ -40,7 +40,7 @@ public class Bot : NetworkBehaviour
 
     //properties
     public BotStatus Status { get { return this.status; } }
-    public bool BotIsActive { get { return this.botIsActive; } }
+    public bool BotIsActive { get { return this.botIsActive; } set { if (botHasBeenSet) { botIsActive = value; } } }
 
     //methods
     private void Awake()
@@ -129,7 +129,7 @@ public class Bot : NetworkBehaviour
             {
                 if (huntTargetID != null && ParticipantManager.GrabbingAndShootingAllowed)
                 {
-                    if (huntTargetID.HealthStats.Lives > 0) //target is alive
+                    if (huntTargetID.HealthStats.Lives > 0 && huntTargetID.MainObject != null) //target is alive
                     {
                         bool newPlayerInSight = false;
                         if (objectInSight(huntTargetBody.GetComponent<Transform>())) //enemy is in eye angle 
@@ -171,17 +171,22 @@ public class Bot : NetworkBehaviour
                             yield return waitLastSeen;                           
                         }
                     }
-                    else//target is dead
+                    else//target is dead or has been removed from the game
                     {
                         if (playerInSight != false) { playerInSight = false; }
                         stopHunt();
                     }
                 }
-                else //target disappeared or has been removed from game
+                else //targetID is missing
                 {
                     if (playerInSight != false) { playerInSight = false; }
                     stopHunt();
                 }
+            }
+            else //bot is not active
+            {
+                if (playerInSight != false) { playerInSight = false; }
+                stopHunt();
             }
         }
     } //FINISHED
@@ -197,7 +202,10 @@ public class Bot : NetworkBehaviour
             resetLookDirection = true;
             goToLastSeenDistanceCheck = false;
             RpcStopHunt();
-            if (ParticipantManager.MovementAllowed) { goToNextDestination(); }           
+            if (botIsActive)
+            {
+                if (ParticipantManager.MovementAllowed) { goToNextDestination(); }
+            }
         }
     }  //FINISHED
     [ClientRpc]

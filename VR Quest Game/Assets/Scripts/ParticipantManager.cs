@@ -12,8 +12,6 @@ public class ParticipantManager : NetworkBehaviour {
 
     private Transform blueSpawn;
     private Transform redSpawn;
-    private List<string> playerNameBin;
-    private List<GameObject> playerObjectBin;
     private BotDetectionSystem bds;
     private ScoreboardSystem ss;
     private bool fillWithBots;
@@ -36,8 +34,6 @@ public class ParticipantManager : NetworkBehaviour {
     public override void OnStartServer()
     {
         ss = this.GetComponent<ScoreboardSystem>();
-        playerNameBin = new List<string>();
-        playerObjectBin = new List<GameObject>();
         players = new List<ParticipantID>();
         bots = new List<ParticipantID>();
     }
@@ -52,18 +48,6 @@ public class ParticipantManager : NetworkBehaviour {
         movementAllowed = true;
         grabbingAndShootingAllowed = true;
         selfRespawnAllowed = isSelfRespawnAllowed;
-
-        for(int i = 0; i< playerObjectBin.Count; i++) //register early players via bin
-        {
-            ParticipantID myID = RegisterPlayer(playerObjectBin[i], playerNameBin[i]);
-            if(myID != null)
-            {
-                ParticipantHelper.PH.SpawnPlayerWithMaterials(myID);
-            }           
-            Debug.Log("player: " + myID.Name + " registered via bin");
-        }
-        playerNameBin = null;
-        playerObjectBin = null;
     }
     [Server]
     public void StartGame()
@@ -144,30 +128,55 @@ public class ParticipantManager : NetworkBehaviour {
         ss.ReportKill(attacker, destroyed);
     } //checking is done by PH
     [Server]
-    public ParticipantID RegisterPlayer(GameObject me, string Name) //player can register here!
-    {       
-        int id;
-        int spawnNumber;
-        Team team;
-        ParticipantID newID;
-        ss.GetNextParticipantStats(out id, out team, out spawnNumber);
-
-        if(id != -1) //player succesful registered!
+    public ParticipantID RegisterPlayer(GameObject me, string Name, bool firstTrial) //player can register here!
+    {
+        if (getIDByBodyPart(me) == null) //this player has not been registered yet
         {
-            newID = new ParticipantID(id, Name, team, spawnNumber, me, new Health());
-        }
-        else //player added to register later
-        {
-            Debug.LogWarning("ID was -1! PM.RegisterPlayer");
-            playerNameBin.Add(Name);
-            playerObjectBin.Add(me);
-            return null;
-        }
+            if (ss.TotalParticipants < ScoreboardSystem.TeamSize * 2) //there is place for another player
+            {
 
-        players.Add(newID);
-        ss.AddID(newID);
-        Debug.Log("player: " + newID.Name + " registered on " + team + " with id: "+ id);
-        return newID;
+                int id;
+                int spawnNumber;
+                Team team;
+                ParticipantID newID;
+                ss.GetNextParticipantStats(out id, out team, out spawnNumber);
+
+                if (id != -1) //player succesful registered!
+                {
+                    newID = new ParticipantID(id, Name, team, spawnNumber, me, new Health());
+                }
+                else //player register failed
+                {
+                    Debug.LogWarning("ParticipantManager: player " + Name + " failed to register (id was -1)");
+                    return null;
+                }
+
+                players.Add(newID);
+                ss.AddID(newID);
+                Debug.Log("ParticipantManager: player " + newID.Name + " registered on " + team + " with id: " + id);
+                return newID;
+            }
+            else //check if bot can be removed
+            {
+                if (firstTrial)
+                {
+                    if (bots.Count > 0) //remove bot
+                    {
+                        ParticipantID bot = bots[bots.Count - 1];
+                        bot.MainObject.GetComponent<Bot>().BotIsActive = false;
+                        Disconnect(bot);
+                        bots.Remove(bot);
+                        NetworkServer.Destroy(bot.MainObject);
+                        Debug.Log("ParticipantManager: bot (id: " + bot.ID + ") has been removed");
+                        return RegisterPlayer(me, Name, false); //try again
+                    }
+                }
+                Debug.LogWarning("ParticipantManager: player " + Name + " failed to register (no slots available)");
+                return null;
+            }
+        }
+        Debug.LogWarning("ParticipantManager: player " + Name + " failed to register (already registered)");
+        return null;
     } 
     [Server]
     private void CreateBot()
@@ -198,7 +207,7 @@ public class ParticipantManager : NetworkBehaviour {
         }
         else
         {
-            Debug.LogWarning("ID was -1! PM.CreateBot");
+            Debug.LogWarning("ParticipantManager: bot failed to register");
             Destroy(newBot);
             return;
         }

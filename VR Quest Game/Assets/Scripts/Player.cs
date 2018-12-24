@@ -28,6 +28,14 @@ public class Player : NetworkBehaviour
     public Transform bowTransform { get { return bow.transform; } }
 
     //methods
+
+    private void FixedUpdate()
+    {
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            ParticipantHelper.PH.CmdRegisterPlayer(this.gameObject.GetComponent<NetworkIdentity>().netId, "Bas Joosten");
+        }
+    }
     private void Start()
     {
         setVRRigAndBodyParts();
@@ -55,7 +63,7 @@ public class Player : NetworkBehaviour
         {
             if (myVRRig != null) { myVRRig.ConInput.SetPlayer(this); }
             bow.GetComponent<PlayerBow>().ThisIsMyBow();
-            ParticipantHelper.PH.CmdRegisterPlayer(this.gameObject.GetComponent<NetworkIdentity>().netId, "Bas Joosten");
+            //ParticipantHelper.PH.CmdRegisterPlayer(this.gameObject.GetComponent<NetworkIdentity>().netId, "Bas Joosten");
             //bow.GetComponent<PlayerBow>().SetOwner(this.GetComponent<ParticipantID>()); //clients don't own an ID, the sever does!
             //checkMaterials(); //will be done by the server in CmdRegisterPlayer
             //myVRRig.Head.GetComponent<BoxCollider>().enabled = false; //is not possible

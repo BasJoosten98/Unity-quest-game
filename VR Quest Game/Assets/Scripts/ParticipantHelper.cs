@@ -131,7 +131,7 @@ public class ParticipantHelper : NetworkBehaviour
     public void CmdRegisterPlayer(NetworkInstanceId NetID, string Name)
     {
         GameObject me = NetworkServer.FindLocalObject(NetID);
-        ParticipantID myID = pm.RegisterPlayer(me, Name);
+        ParticipantID myID = pm.RegisterPlayer(me, Name, true);
         if (myID != null)
         {
             SpawnPlayerWithMaterials(myID);
@@ -152,8 +152,11 @@ public class ParticipantHelper : NetworkBehaviour
     [Server]
     private void respawnParticipant(ParticipantID participant)
     {
-        participant.HealthStats.Revive();
-        if (participant.IsPlayer) { participant.MainObject.GetComponent<Player>().RpcRespawn(GetSpawnPoint()); }
-        else { participant.MainObject.GetComponent<Bot>().Respawn(GetSpawnPoint()); }
+        if (participant.MainObject != null)
+        {
+            participant.HealthStats.Revive();
+            if (participant.IsPlayer) { participant.MainObject.GetComponent<Player>().RpcRespawn(GetSpawnPoint()); }
+            else { participant.MainObject.GetComponent<Bot>().Respawn(GetSpawnPoint()); }
+        }
     }
 }

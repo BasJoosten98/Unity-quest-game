@@ -95,30 +95,57 @@ public class BotDetectionSystem : MonoBehaviour {
                     }
                     for (int b1 = 0; b1 < bots.Count; b1++) 
                     {
-                        for (int b2 = b1 + 1; b2 < bots.Count; b2++) //warning bots about enemy bots
+                        if (bots[b1].MainObject != null)
                         {
-                            if(enemyCheck(bots[b1], bots[b2]))
+                            for (int b2 = b1 + 1; b2 < bots.Count; b2++) //warning bots about enemy bots
                             {
-                                if (distanceBetween(bots[b1].MainObject.transform.GetChild(0).position, bots[b2].MainObject.transform.GetChild(0).position) <= warningDistance)
+                                if (bots[b1].MainObject != null)
                                 {
-                                    bots[b1].MainObject.GetComponent<Bot>().EnemyWarning(bots[b2]);
-                                    bots[b2].MainObject.GetComponent<Bot>().EnemyWarning(bots[b1]);
+                                    if (bots[b2].MainObject != null)
+                                    {
+                                        if (enemyCheck(bots[b1], bots[b2]))
+                                        {
+                                            if (distanceBetween(bots[b1].MainObject.transform.GetChild(0).position, bots[b2].MainObject.transform.GetChild(0).position) <= warningDistance)
+                                            {
+                                                bots[b1].MainObject.GetComponent<Bot>().EnemyWarning(bots[b2]);
+                                                bots[b2].MainObject.GetComponent<Bot>().EnemyWarning(bots[b1]);
+                                            }
+                                        }
+                                    }
+                                    yield return wait;
+                                    wait = new WaitForSecondsRealtime(waitTime);
                                 }
-                            }                            
-                            yield return wait;
-                            wait = new WaitForSecondsRealtime(waitTime);
-                        }
-                        for (int p = 0; p < players.Count; p++) //warning bots about enemy players
-                        {
-                            if (enemyCheck(bots[b1], players[p]))
-                            {
-                                if (distanceBetween(bots[b1].MainObject.transform.GetChild(0).position, players[p].MainObject.transform.GetChild(0).transform.position) <= warningDistance)
+                                else
                                 {
-                                    bots[b1].MainObject.GetComponent<Bot>().EnemyWarning(players[p]);
+                                    yield return wait;
+                                    wait = new WaitForSecondsRealtime(waitTime);
+                                    break;
                                 }
                             }
-                            yield return wait;
-                            wait = new WaitForSecondsRealtime(waitTime);
+                            for (int p = 0; p < players.Count; p++) //warning bots about enemy players
+                            {
+                                if (bots[b1].MainObject != null)
+                                {
+                                    if (players[p].MainObject != null)
+                                    {
+                                        if (enemyCheck(bots[b1], players[p]))
+                                        {
+                                            if (distanceBetween(bots[b1].MainObject.transform.GetChild(0).position, players[p].MainObject.transform.GetChild(0).transform.position) <= warningDistance)
+                                            {
+                                                bots[b1].MainObject.GetComponent<Bot>().EnemyWarning(players[p]);
+                                            }
+                                        }
+                                    }
+                                    yield return wait;
+                                    wait = new WaitForSecondsRealtime(waitTime);
+                                }
+                                else
+                                {
+                                    yield return wait;
+                                    wait = new WaitForSecondsRealtime(waitTime);
+                                    break;
+                                }
+                            }
                         }
                     }
                     
